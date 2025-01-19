@@ -11,27 +11,28 @@
 #include <GLFW/glm.hpp>
 #include <GLFW/gtc/matrix_transform.hpp>
 #include <GLFW/gtc/type_ptr.hpp>
-
+#include "debug.h"
 
 using namespace std;
 using namespace glm;
 
-static int width = 1200;
-static int height = 800;
+static int width = 1400;
+static int height = 1000;
 static bool keys[1024];
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
-
 void do_movement();
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 Camera* camera = nullptr; // Глобальная переменная для хранения камеры
 
+Debug debug;
+
 int main() {
+	const char* title = "3D world";
 	// Инициализация GLFW
 	if (!glfwInit()) {
-		cout << "Failed to initialize GLFW" << endl;
+		debug.error_debug("Failed to initialize GLFW");
 		return -1;
 	}
 
@@ -42,18 +43,20 @@ int main() {
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	// Создание окна
-	GLFWwindow* window = glfwCreateWindow(width, height, "3D World", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(width, height, title, nullptr, nullptr);
 	if (window == nullptr) {
-		cout << "Failed to create GLFW window" << endl;
+		debug.error_debug("Failed to create GLFW window");
 		glfwTerminate();
 		return -1;
 	}
 
 	glfwMakeContextCurrent(window); // Делаем контекст текущим
 
+	debug.success_debug("Window was created");
+
 	glewExperimental = GL_TRUE; // Включаем экспериментальные функции GLEW
 	if (glewInit() != GLEW_OK) { // Проверяем инициализацию GLEW
-		cout << "Failed to initialize GLEW" << endl;
+		debug.error_debug("Failed to initialize GLEW");
 		return -1;
 	}
 
@@ -68,7 +71,7 @@ int main() {
 	unsigned char* icon = stbi_load("res/textures/icon.png", &width, &height, &channelsi, 0); // Загружаем наш icon
 
 	if (icon == nullptr) {
-		cout << "Failed load texture image" << endl;
+		debug.error_debug("Failed load icon image");
 		return -1;
 	}
 
@@ -80,6 +83,8 @@ int main() {
 
 	glfwSetWindowIcon(window, 1, images);
 	stbi_image_free(icon);
+
+	debug.success_debug("Icon was init");
 
 	GLfloat vertices[] = {
 		// Передняя грань (плоскость Z = -0.5)
@@ -148,10 +153,12 @@ int main() {
 	// Загрузка текстуры
 	int channels;
 
-	unsigned char* image = stbi_load("res/textures/fgfggf.jpg", &width, &height, &channels, 0); // Загружаем наш image
+	const char* texture_path = "res/textures/fgfggf.jpg";
+	unsigned char* image = stbi_load(texture_path, &width, &height, &channels, 0); // Загружаем наш image
 
 	if (image == nullptr) {
-		cout << "Failed load texture image" << endl;
+		debug.error_debug("Failed load texture image ->");
+		debug.error_debug(texture_path);
 		return -1;
 	}
 
@@ -174,7 +181,7 @@ int main() {
 		format = GL_RGBA;
 	}
 	else {
-		cout << "Error Create format::Unsupported channel used";
+		debug.error_debug("Error Create format::Unsupported channel used");
 	}
 
 	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image); // Наносим пиксели
@@ -183,6 +190,9 @@ int main() {
 
 	glActiveTexture(GL_TEXTURE0); // Устанавливаем индекс нашей текстуры
 	glBindTexture(GL_TEXTURE_2D, texture); // Опять привязуем
+
+	debug.success_debug("Texture was loaded ->");
+	debug.success_debug(texture_path);
 
 	GLuint VBO, VAO, EBO;
 
@@ -210,6 +220,13 @@ int main() {
 
 	camera = new Camera(shader, 45.0f, 0.1f, 100.0f, (float)width, (float)height);
 
+	if (camera == nullptr) {
+		debug.error_debug("Camera is not init");
+	}
+	else {
+		debug.success_debug("Camera init");
+	}
+
 	vec3 position = vec3(0.1f, 1.0f, -3.0f);
 
 	glfwSetCursorPosCallback(window, mouse_callback);
@@ -218,6 +235,7 @@ int main() {
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
+		cout << "X - " << camera->cameraPos.x << " Y - " << camera->cameraPos.y << " Z - " << camera->cameraPos.z << endl;;
 
 		camera->update_delta();
 
@@ -291,7 +309,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	camera->lastX = xpos;
 	camera->lastY = ypos;
 
-	GLfloat sensivity = 0.3f; // Увеличиваем чувствительность для лучшего управления
+	GLfloat sensivity = 0.2f; // Увеличиваем чувствительность для лучшего управления
 	xoffset *= sensivity;
 	yoffset *= sensivity;
 
