@@ -246,7 +246,7 @@ int main() {
 
 		float distance = length(camera->cameraPos - position);
 
-		if (distance < 0.7f) { // Коллизия
+		if (distance < 0.9f) { // Коллизия
 			camera->moveBackward(3.0f);
 			debug.success_debug("Collision Detected");
 		}
