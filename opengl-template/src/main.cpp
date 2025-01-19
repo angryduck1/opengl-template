@@ -244,6 +244,13 @@ int main() {
 
 		shader.Use(); // Используем шейдеры
 
+		float distance = length(camera->cameraPos - position);
+
+		if (distance < 0.7f) { // Коллизия
+			camera->moveBackward(3.0f);
+			debug.success_debug("Collision Detected");
+		}
+
 		camera->updateViewProjection();
 		camera->change_position(position);
 
@@ -256,7 +263,6 @@ int main() {
 
 		glfwSwapBuffers(window);
 	}
-
 
 	return 0;
 }
@@ -309,7 +315,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	camera->lastX = xpos;
 	camera->lastY = ypos;
 
-	GLfloat sensivity = 0.2f; // Увеличиваем чувствительность для лучшего управления
+	GLfloat sensivity = 0.3f; // Увеличиваем чувствительность для лучшего управления
 	xoffset *= sensivity;
 	yoffset *= sensivity;
 
